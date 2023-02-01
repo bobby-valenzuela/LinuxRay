@@ -266,19 +266,6 @@ then
 fi
 
 
-# sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
-
-# [[ "${num_user}" -gt 0 ]]
-
-# grep -E '(^root)|(^\s+root)' /etc/security/limits.conf | grep nproc
-# sudo -i
-# echo -e "root\thard\tnproc\t30" >> /etc/security/limits.conf
-# logout
-
-# sudo bash -c 'echo -e "root\thard\tnproc\t30\" >> /etc/security/limits.conf'
-# sudo bash -c "echo -e 'root\thard\tnproc\t30' >> /etc/security/limits.conf"
-
-
 # Clean Zombie processes
 # use chage -l <username> to show last password change
 # systemctl mask ctrl-alt-del.target (disable reboot hotley)
