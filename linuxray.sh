@@ -117,31 +117,67 @@ print_colored()
 #           MAIN PROGRAM START
 # **********************************************************
 
+# Heading
 prHeader '=' 
 prtxtCentre "LinuxRay" 
 prHeader '='
 printf '\n\n\n'
 
+# RAM
 print_colored "green" "Top Five Processes Eating Memory"
 prHeaderLeftQuarter "-"
-ps auxf | sort -nr -k 4 | head -5 | awk '{ print "MEM%: " $4  "| PID: " $2 " | CMD: " $11 $12 $13 }'  
+ps auxf | sort -nr -k 4 | head -5 | awk '{ print "MEM%: " $4  " | PID: " $2 " | CMD: " $11 $12 $13 }'  
 echo
 
+# CPU
 print_colored "green" "Top Five Processes Eating CPU"
 prHeaderLeftQuarter "-"
-ps auxf | sort -nr -k 3 | head -5 | awk '{ print "CPU%: " $3  "| PID: " $2 " | CMD: " $11 $12 $13 }'
+ps auxf | sort -nr -k 3 | head -5 | awk '{ print "CPU%: " $3  " | PID: " $2 " | CMD: " $11 $12 $13 }'
 echo
 
-# kill any running processes pointing to deleted files
+# Count/Kill any running processes pointing to deleted files
 print_colored "green" "Running Processes attached to deleted files"
 prHeaderLeftQuarter "-"
-num_proc_del=$(lsof | grep -i deleted | wc -l)
+#num_proc_del=$(lsof 2>/dev/null | grep -i deleted | wc -l)
 print_colored "BLUE" "Found: ${num_proc_del}" "no"
-lsof | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill 
-printf "[DELETED]"
-echo
+lsof | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
+printf "[DELETED]\n"
 echo
 
+# Dangling link cleanup
+print_colored "green" "Finding/Cleaning any dangling softlinks"
+prHeaderLeftQuarter "-"
+echo "Finding..."
+# sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
+sleep 3
+echo "Cleaned Up! (searched 5 levels deep from root)"
+echo
+
+# Drive Usage
+print_colored "green" "Percent Used per Drive"
+prHeaderLeftQuarter "-"
+df -h | grep -Ev 'tmpfs|Filesystem' | awk '{ print $1 " => " $5 }'
+echo
+
+# critical disk usage (show top three large files)
+print_colored "green" "Top 3 Largest Folders"
+prHeaderLeftQuarter "-"
+
+print_colored "BLUE" "Starting at /"
+sudo du /* -hd0 2>/dev/null | sort -rhk1 | head -3
+echo
+
+print_colored "BLUE" "Starting at /home/"
+sudo du /home/* -hd0 2>/dev/null | sort -rhk1 | head -3
+echo
+
+print_colored "BLUE" "Starting at /var/"
+sudo du /var/* -hd0 2>/dev/null | sort -rhk1 | head -3
+echo
+
+
+
+echo
 exit 0
 
  
@@ -150,15 +186,12 @@ exit 0
 apt update 
 
 
-logout
 
 #######  TODO ########
 
 # Make a systemd service of itself
-# Dangling link cleanup
 # old file archiver
 # integrity checker
-# critical disk usage (show top three large files)
 # systemd-analyze blame (see which process tkes the longest to start pm boot)
 # Check for any soft links not using absolute paths pointing to destination
 # Check for any links
