@@ -197,7 +197,7 @@ print_colored "blue" "[SSH] " "no"
 printf "PermitRootLogin Enabled: "
 root_login_enabled=$(grep -E '^PermitRootLogin|^\s+PermitRootLogin' /etc/ssh/sshd_config | sort -rk1 | tail -1 | awk '{ print $2 }' | xargs)
 
-if [[ "${root_login_enabled,,}" == yes ]]
+if [[ "${root_login_enabled,,}" == 'yes' ]]
 then
   print_colored "red" "Enabled" "no"
   print_colored "yellow" "[WARNING]" "no"
@@ -212,7 +212,7 @@ print_colored "blue" "[SSH] " "no"
 printf "PasswordAuthentication Enabled: "
 pass_login_enabled=$(grep -E '^PasswordAuthentication|^\s+PasswordAuthentication' /etc/ssh/sshd_config | sort -rk1 | tail -1 | awk '{ print $2 }' | xargs)
 
-if [[ "${pass_login_enabled,,}" == yes ]]
+if [[ "${pass_login_enabled,,}" == 'yes' ]]
 then
   print_colored "red" "Enabled" "no"
   print_colored "yellow" "[WARNING]" "no"
@@ -223,10 +223,61 @@ fi
 
 
 
-# Prone to fork bomb?
+# Vulvertable to fork bomb?
+  # Could use ulimit to fix - but editing limit.conf as ulimit is temporary (session-based)
+if [[ -e /etc/security/limits.conf ]]
+then
+  # Checking root
+  print_colored "blue" "[LMT] " "no"
+  printf "Vulnerable to Fork Bomb (Root): "
+
+  num_root=$(grep -E '(^root)|(^\s+root)' /etc/security/limits.conf | grep nproc | tail -1 | awk '{ print $4 }')
+
+  if [[ "${num_root}" -gt 0 ]]
+  then
+    print_colored "green" "NO " "no"
+    printf "[Current nproc root Limit : ${num_root}]"
+  else
+    print_colored "red" "YES " "no"
+    sudo bash -c "echo -e 'root\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
+    print_colored "green" "=> FIXED " "no"
+  fi
+  echo
+  
+  # Checking all
+  print_colored "blue" "[LMT] " "no"
+  printf "Vulnerable to Fork Bomb (all): "
+
+  num_all=$(grep -E '(^\*)|(^\s+\*)' /etc/security/limits.conf | grep nproc | tail -1 | awk '{ print $4 }')
+
+  if [[ "${num_all}" -gt 0 ]]
+  then
+    print_colored "green" "NO " "no"
+    printf "[Current nproc all Limit : ${num_all}]"
+  else
+    print_colored "red" "YES " "no"
+    sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
+    print_colored "green" "=> FIXED " "no"
+  fi
+  echo
+  
+  
+
+fi
+
+
+# sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
+
+# [[ "${num_user}" -gt 0 ]]
+
+# grep -E '(^root)|(^\s+root)' /etc/security/limits.conf | grep nproc
 # sudo -i
 # echo -e "root\thard\tnproc\t30" >> /etc/security/limits.conf
 # logout
+
+# sudo bash -c 'echo -e "root\thard\tnproc\t30\" >> /etc/security/limits.conf'
+# sudo bash -c "echo -e 'root\thard\tnproc\t30' >> /etc/security/limits.conf"
+
 
 # Clean Zombie processes
 # use chage -l <username> to show last password change
