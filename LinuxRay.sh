@@ -115,16 +115,25 @@ prtxtCentre "LinuxRay"
 prHeader '='
 printf '\n\n\n'
 
+
+### PERFORMANCE
+prHeaderLeftQuarter "="
+print_colored "cyan" "PERFORMANCE"
+prHeaderLeftQuarter "="
+echo
+
 # RAM
 print_colored "green" "Top Five Processes Eating Memory"
 prHeaderLeftQuarter "-"
 ps auxf | sort -nr -k 4 | head -5 | awk '{ print "MEM%: " $4  " | PID: " $2 " | CMD: " $11 $12 $13 }'  
+echo
 echo
 
 # CPU
 print_colored "green" "Top Five Processes Eating CPU"
 prHeaderLeftQuarter "-"
 ps auxf | sort -nr -k 3 | head -5 | awk '{ print "CPU%: " $3  " | PID: " $2 " | CMD: " $11 $12 $13 }'
+echo
 echo
 
 # Count/Kill any running processes pointing to deleted files
@@ -135,13 +144,29 @@ print_colored "BLUE" "Found: ${num_proc_del}" "no"
 #lsof 2>/dev/null | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
 printf "[DELETED]\n"
 echo
+echo
 
-# Dangling link cleanup
-print_colored "green" "Finding/Cleaning any dangling softlinks"
+# see which process tkes the longest to start om boot
+print_colored "green" "Top Five Processes that take the longest to load"
 prHeaderLeftQuarter "-"
-echo "Finding..."
-# sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
-echo "Cleaned Up! (searched 5 levels deep from root)"
+systemd-analyze blame 2> /dev/null | head -5
+echo
+echo
+
+# Zombie processes
+zomb_count=$(ps aux | awk '/Z/ { pid=$2;state=$8;cmd=$11; if(state=="Z")print pid,cmd }' | wc -l)
+print_colored "green" "Zombie Processes (${zomb_count} Total)"
+prHeaderLeftQuarter "-"
+ps aux | awk '/Z/ { pid=$2;state=$8;cmd=$11; if(state=="Z")print pid,cmd }' | head
+echo
+echo
+
+
+### USAGE AND FILESYSTEM
+prHeaderLeftQuarter "="
+print_colored "cyan" "USAGE AND FILESYSTEM"
+prHeaderLeftQuarter "="
+echo
 echo
 
 # Drive Usage
@@ -149,6 +174,8 @@ print_colored "green" "Percent Used per Drive"
 prHeaderLeftQuarter "-"
 df -h | grep -Ev 'tmpfs|Filesystem|none' | awk '{ print $1 " => " $5 }'
 echo
+echo
+
 
 # critical disk usage (show top three large files)
 print_colored "green" "Top 3 Largest Folders"
@@ -165,6 +192,25 @@ echo
 print_colored "BLUE" "Starting at /var/"
 sudo du /var/* -hd0 2>/dev/null | sort -rhk1 | head -3
 echo
+echo
+
+
+# Dangling link cleanup
+print_colored "green" "Finding/Cleaning any dangling softlinks"
+prHeaderLeftQuarter "-"
+echo "Finding..."
+# sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
+echo "Cleaned Up! (searched 5 levels deep from root)"
+echo
+echo
+
+
+
+### NETWORK AND SECURITY
+prHeaderLeftQuarter "="
+print_colored "cyan" "NETWORK AND SECURITY"
+prHeaderLeftQuarter "="
+echo
 
 # Get Open Ports
 print_colored "green" "Listening Ports"
@@ -179,12 +225,6 @@ else
   sudo ss -tulpn | awk '{ print $5 }' | grep -Ev '^127|Local' | sed -E 's/^.*\://' | sort | uniq
 fi
 echo
-
-
-# see which process tkes the longest to start om boot
-print_colored "green" "Top Five Processes that take the longest to load"
-prHeaderLeftQuarter "-"
-systemd-analyze blame 2> /dev/null | head -5
 echo
 
 
@@ -264,9 +304,10 @@ then
   
 
 fi
+echo
 
 
-# Clean Zombie processes
+
 # use chage -l <username> to show last password change
 # systemctl mask ctrl-alt-del.target (disable reboot hotley)
 # Make a systemd service of itself
