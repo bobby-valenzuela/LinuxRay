@@ -80,10 +80,6 @@ prtxtCentre(){
 
 }
 
-
-
-
-
 # print colored text
 print_colored()
 {
@@ -107,10 +103,6 @@ print_colored()
 
 
 }
-
-# Examples
-# print_colored 'red' 'my message'
-# print_colored 'red' 'my message\n\n' 'no'
 
 
 # **********************************************************
@@ -186,6 +178,64 @@ then
 else
   sudo ss -tulpn | awk '{ print $5 }' | grep -Ev '^127|Local' | sed -E 's/^.*\://' | sort | uniq
 fi
+echo
+
+
+# see which process tkes the longest to start om boot
+print_colored "green" "Top Five Processes that take the longest to load"
+prHeaderLeftQuarter "-"
+systemd-analyze blame 2> /dev/null | head -5
+echo
+
+
+# Security
+print_colored "green" "Security Checks"
+prHeaderLeftQuarter "-"
+
+#  SSH see if root login is enabled
+print_colored "blue" "[SSH] " "no"
+printf "PermitRootLogin Enabled: "
+root_login_enabled=$(grep -E '^PermitRootLogin|^\s+PermitRootLogin' /etc/ssh/sshd_config | sort -rk1 | tail -1 | awk '{ print $2 }' | xargs)
+
+if [[ "${root_login_enabled,,}" == yes ]]
+then
+  print_colored "red" "Enabled" "no"
+  print_colored "yellow" "[WARNING]" "no"
+  printf "Please consider disabling this feature!"
+else
+  print_colored "green" "Disabled"
+fi
+
+
+# SSH see if password auth is accepted
+print_colored "blue" "[SSH] " "no"
+printf "PasswordAuthentication Enabled: "
+pass_login_enabled=$(grep -E '^PasswordAuthentication|^\s+PasswordAuthentication' /etc/ssh/sshd_config | sort -rk1 | tail -1 | awk '{ print $2 }' | xargs)
+
+if [[ "${pass_login_enabled,,}" == yes ]]
+then
+  print_colored "red" "Enabled" "no"
+  print_colored "yellow" "[WARNING]" "no"
+  printf "Please consider disabling this feature!"
+else
+  print_colored "green" "Disabled"
+fi
+
+
+
+# Prone to fork bomb?
+# sudo -i
+# echo -e "root\thard\tnproc\t30" >> /etc/security/limits.conf
+# logout
+
+# Clean Zombie processes
+# use chage -l <username> to show last password change
+# systemctl mask ctrl-alt-del.target (disable reboot hotley)
+# Make a systemd service of itself
+# - last time fsck was run?
+# lastb to see number of failed login attempts for past day
+
+
 
 echo
 exit 0
@@ -199,28 +249,16 @@ apt update
 
 #######  TODO ########
 
-# Make a systemd service of itself
 # old file archiver
 # integrity checker
-# systemd-analyze blame (see which process tkes the longest to start pm boot)
-# Check for any soft links not using absolute paths pointing to destination
-# Check for any links
 # load average (lscpu to see num cores)
-# Clean Zombie processes
 # Security checks
-  #  Prone to fork bomb?
   # mysql --version to see if mysql/maris db is enabled and port is open on 3306.
   # check fstab for deice name instead of UUIDs
   # Listening on standard SSH port
-  #  SSH see if root login is enabled
-  # SSH see is password auth is accepted
-  # use chage -l <username> to show last password change
-  # - last time fsck was run?
   # w or who to see idle users for long time
-  # lastb to see number of failed login attempts for past day
   # systemd mask to see if processes can start disabled processes?
   # print this in or Banner?
-  # systemctl mask ctrl-alt-del.target (disable reboot hotley)
   # verify SSH file/dir permissions
   # git master/main preventkju
   # vscode cleanup 
