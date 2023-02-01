@@ -13,21 +13,144 @@
 # If not root or sudoer...
 { [[ $(id -u) -eq 0 ]] || $(sudo -v &>/dev/null) ; } || { echo -e "Please run with sudo privileges.\nExiting..." ; exit 1 ; } 
 
-sudo su -
 
-# get top 5 process eating memory
-ps auxf | sort -nr -k 4 | head -5
+# **********************************************************
+#           FUNCTIONS
+# **********************************************************
+
+# Get count of characters wide the terminal is
+COLUMNS=$(tput cols)
+
+prHeader(){
+
+    for each in $(seq 1 $COLUMNS)
+
+    do
+
+    echo -n $1
+
+    done
+
+}
+
+prHeaderLeftHalf(){
+    for each in $(seq 1 $(($COLUMNS/2)))
+
+    do
+
+      echo -n $1
+
+    done
+
+    echo
+
+}
+
+prHeaderLeftThird(){
+    for each in $(seq 1 $(($COLUMNS/3)))
+
+    do
+
+      echo -n $1
+
+    done
+
+    echo
+
+}
+
+prHeaderLeftQuarter(){
+    for each in $(seq 1 $(($COLUMNS/4)))
+
+    do
+
+      echo -n $1
+
+    done
+
+    echo
+
+}
+
+prtxtCentre(){
+
+  title=$1
+
+  printf "%*s\n" $(((${#title}+$COLUMNS)/2)) "$title"
+
+}
+
+
+
+
+
+# print colored text
+print_colored()
+{
+
+    [[ -z "$1" ||  -z "$2" ]] && echo "Usage: print_colored <color> <text>" && exit 1
+    
+    auto_print_newline=''
+    [[ "$3" == 'no' ]] && auto_print_newline='-n' 
+
+    case "$1" in
+        "grey" | "GREY")        echo -e ${auto_print_newline} "\033[90m$2 \033[00m" ;;
+        "red" | "RED")          echo -e ${auto_print_newline} "\033[91m$2 \033[00m" ;;
+        "green" | "GREEN")      echo -e ${auto_print_newline} "\033[92m$2 \033[00m" ;;
+        "yellow" | "YELLOW")    echo -e ${auto_print_newline} "\033[93m$2 \033[00m" ;;
+        "blue" | "BLUE")        echo -e ${auto_print_newline} "\033[94m$2 \033[00m" ;;
+        "purple" | "PURPLE")    echo -e ${auto_print_newline} "\033[95m$2 \033[00m" ;;
+        "cyan" | "CYAN")        echo -e ${auto_print_newline} "\033[96m$2 \033[00m" ;;
+        "white" | "WHITE")      echo -e ${auto_print_newline} "\033[96m$2 \033[00m" ;;
+        *   )               echo -e ${auto_print_newline} "\033[96m$2 \033[00m" ;;
+    esac
+
+
+}
+
+# Examples
+# print_colored 'red' 'my message'
+# print_colored 'red' 'my message\n\n' 'no'
+
+
+# **********************************************************
+#           MAIN PROGRAM START
+# **********************************************************
+
+prHeader '=' 
+prtxtCentre "LinuxRay" 
+prHeader '='
+printf '\n\n\n'
+
+print_colored "green" "Top Five Processes Eating Memory"
+prHeaderLeftQuarter "-"
+ps auxf | sort -nr -k 4 | head -5 | awk '{ print "MEM%: " $4  "| PID: " $2 " | CMD: " $11 $12 $13 }'  
+echo
+
+print_colored "green" "Top Five Processes Eating CPU"
+prHeaderLeftQuarter "-"
+ps auxf | sort -nr -k 3 | head -5 | awk '{ print "CPU%: " $3  "| PID: " $2 " | CMD: " $11 $12 $13 }'
+echo
+
+# kill any running processes pointing to deleted files
+print_colored "green" "Running Processes attached to deleted files"
+prHeaderLeftQuarter "-"
+num_proc_del=$(lsof | grep -i deleted | wc -l)
+print_colored "BLUE" "Found: ${num_proc_del}" "no"
+lsof | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill 
+printf "[DELETED]"
+echo
+echo
+
+exit 0
+
  
-# get top 5 process eating cpu ##
-ps auxf | sort -nr -k 3 | head -5
 
 # Update cache and (maybe?) upgrade binaries
 apt update 
 
-# kill any running processes pointing to deleted files
-lsof | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill 
 
-
+logout
 
 #######  TODO ########
 
