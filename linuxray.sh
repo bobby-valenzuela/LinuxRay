@@ -140,7 +140,7 @@ print_colored "green" "Running Processes attached to deleted files"
 prHeaderLeftQuarter "-"
 #num_proc_del=$(lsof 2>/dev/null | grep -i deleted | wc -l)
 print_colored "BLUE" "Found: ${num_proc_del}" "no"
-lsof | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
+#lsof 2>/dev/null | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
 printf "[DELETED]\n"
 echo
 
@@ -149,14 +149,13 @@ print_colored "green" "Finding/Cleaning any dangling softlinks"
 prHeaderLeftQuarter "-"
 echo "Finding..."
 # sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
-sleep 3
 echo "Cleaned Up! (searched 5 levels deep from root)"
 echo
 
 # Drive Usage
 print_colored "green" "Percent Used per Drive"
 prHeaderLeftQuarter "-"
-df -h | grep -Ev 'tmpfs|Filesystem' | awk '{ print $1 " => " $5 }'
+df -h | grep -Ev 'tmpfs|Filesystem|none' | awk '{ print $1 " => " $5 }'
 echo
 
 # critical disk usage (show top three large files)
@@ -175,7 +174,18 @@ print_colored "BLUE" "Starting at /var/"
 sudo du /var/* -hd0 2>/dev/null | sort -rhk1 | head -3
 echo
 
+# Get Open Ports
+print_colored "green" "Listening Ports"
+prHeaderLeftQuarter "-"
 
+using_netstat=$({ netstat --version &> /dev/null && echo 1 ; } || echo 0)
+
+if [[ using_netstat == 1 ]]
+then
+  sudo netstat -tulpn | grep LISTEN | awk '{ print $7 }' | sed -E 's/\/.*//'
+else
+  sudo ss -tulpn | awk '{ print $5 }' | grep -Ev '^127|Local' | sed -E 's/^.*\://' | sort | uniq
+fi
 
 echo
 exit 0
