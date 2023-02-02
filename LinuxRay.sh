@@ -234,7 +234,7 @@ prHeaderLeftQuarter "-"
 
 #  SSH see if root login is enabled
 print_colored "blue" "[SSH] " "no"
-printf "PermitRootLogin Enabled: "
+printf "PermitRootLogin: \t\t\t"
 root_login_enabled=$(grep -E '^PermitRootLogin|^\s+PermitRootLogin' /etc/ssh/sshd_config | sort -rk1 | tail -1 | awk '{ print $2 }' | xargs)
 
 if [[ "${root_login_enabled,,}" == 'yes' ]]
@@ -249,7 +249,7 @@ fi
 
 # SSH see if password auth is accepted
 print_colored "blue" "[SSH] " "no"
-printf "PasswordAuthentication Enabled: "
+printf "PasswordAuthentication: \t\t\t"
 pass_login_enabled=$(grep -E '^PasswordAuthentication|^\s+PasswordAuthentication' /etc/ssh/sshd_config | sort -rk1 | tail -1 | awk '{ print $2 }' | xargs)
 
 if [[ "${pass_login_enabled,,}" == 'yes' ]]
@@ -262,6 +262,19 @@ else
 fi
 
 
+# Reboot Hotkey
+print_colored "blue" "[SSH] " "no"
+printf "SSH Remote Reboot Hotkey (CTRL+ALT+DEL): "
+if [[ -e /etc/systemd/system/ctrl-alt-del.target ]] 
+then
+  print_colored "green" "Disabled" "no"
+else
+  print_colored "red" "Enabled" "no"
+  sudo systemctl mask ctrl-alt-del.target &> /dev/null
+  print_colored "green" "=> Fixed [Disabled]" "no"
+fi
+echo
+
 
 # Vulvertable to fork bomb?
   # Could use ulimit to fix - but editing limit.conf as ulimit is temporary (session-based)
@@ -269,14 +282,14 @@ if [[ -e /etc/security/limits.conf ]]
 then
   # Checking root
   print_colored "blue" "[LMT] " "no"
-  printf "Vulnerable to Fork Bomb (Root): "
+  printf "Vulnerable to Fork Bomb (Root): \t\t"
 
   num_root=$(grep -E '(^root)|(^\s+root)' /etc/security/limits.conf | grep nproc | tail -1 | awk '{ print $4 }')
 
   if [[ "${num_root}" -gt 0 ]]
   then
     print_colored "green" "NO " "no"
-    printf "[Current nproc root Limit : ${num_root}]"
+    printf "\t[Current nproc root Limit : ${num_root}]"
   else
     print_colored "red" "YES " "no"
     sudo bash -c "echo -e 'root\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
@@ -286,14 +299,14 @@ then
   
   # Checking all
   print_colored "blue" "[LMT] " "no"
-  printf "Vulnerable to Fork Bomb (all): "
+  printf "Vulnerable to Fork Bomb (all):  \t\t"
 
   num_all=$(grep -E '(^\*)|(^\s+\*)' /etc/security/limits.conf | grep nproc | tail -1 | awk '{ print $4 }')
 
   if [[ "${num_all}" -gt 0 ]]
   then
     print_colored "green" "NO " "no"
-    printf "[Current nproc all Limit : ${num_all}]"
+    printf "\t[Current nproc all Limit : ${num_all}]"
   else
     print_colored "red" "YES " "no"
     sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
@@ -304,29 +317,52 @@ then
   
 
 fi
+
+
+# Last password change
+print_colored "blue" "[PAS] " "no"
+pass_change=$(chage -l $(whoami) | grep 'Last password change' | cut -d':' -f2)
+printf "Last Password Change [$(whoami)]:  ${pass_change}"
+
+echo
+echo
 echo
 
+# Fail SSH logins
+print_colored "green" "Failed SSH Logins (most recent 10)"
+prHeaderLeftQuarter "-"
 
+# Debian
+if [[ -e /var/log/auth.log ]]
+then
+  sudo grep -E 'Failed\spassword|Invalid\suser' /var/log/auth.log | tail
+# Redhat
+elif [[ -e /var/log/auth.log ]]
+then
+  sudo grep -E 'Failed\spassword|Invalid\suser' /var/log/secure.log | tail
+else
+# System D
+  sudo journalctl _COMM=sshd | grep -E 'Failed\spassword|Invalid\suser' | tail
+fi
 
-# use chage -l <username> to show last password change
-# systemctl mask ctrl-alt-del.target (disable reboot hotley)
 # Make a systemd service of itself
-# - last time fsck was run?
-# lastb to see number of failed login attempts for past day
-
 
 
 echo
+echo
+
+# Heading
+prHeader '=' 
+prtxtCentre "LinuxRay - END" 
+prHeader '='
+printf '\n\n\n'
+
+
 exit 0
 
  
 
-# Update cache and (maybe?) upgrade binaries
-apt update 
-
-
-
-#######  TODO ########
+#######  POSSIBLE TODOS ########
 
 # old file archiver
 # integrity checker
@@ -336,11 +372,4 @@ apt update
   # check fstab for deice name instead of UUIDs
   # Listening on standard SSH port
   # w or who to see idle users for long time
-  # systemd mask to see if processes can start disabled processes?
-  # print this in or Banner?
-  # verify SSH file/dir permissions
-  # git master/main preventkju
-  # vscode cleanup 
-  # John the ripper? 
-  # package is cleanup 
   # c option too compress large text files (any greater than 100mb) 
