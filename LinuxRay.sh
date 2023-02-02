@@ -147,7 +147,7 @@ echo
 echo
 
 # see which process tkes the longest to start om boot
-print_colored "green" "Top Five Processes that take the longest to load"
+print_colored "green" "Top Five Processes that take the longest to load on boot"
 prHeaderLeftQuarter "-"
 systemd-analyze blame 2> /dev/null | head -5
 echo
