@@ -141,7 +141,7 @@ print_colored "green" "Running Processes attached to deleted files"
 prHeaderLeftQuarter "-"
 #num_proc_del=$(lsof 2>/dev/null | grep -i deleted | wc -l)
 print_colored "BLUE" "Found: ${num_proc_del}" "no"
-#lsof 2>/dev/null | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
+lsof 2>/dev/null | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
 printf "[DELETED]\n"
 echo
 echo
@@ -199,7 +199,7 @@ echo
 print_colored "green" "Finding/Cleaning any dangling softlinks"
 prHeaderLeftQuarter "-"
 echo "Finding..."
-# sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
+sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
 echo "Cleaned Up! (searched 5 levels deep from root)"
 echo
 echo
