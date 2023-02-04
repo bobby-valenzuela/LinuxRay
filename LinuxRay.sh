@@ -214,7 +214,7 @@ echo
 # Dangling link cleanup
 print_colored "green" "Finding dangling softlinks (showing top 5)"
 prHeaderLeftQuarter "-"
-printf "Searching... "
+printf "Searching...\n"
 dang_links_ct=$(sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null | wc -l)
 dang_links_top_five=$(sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null | head -5)
 
