@@ -215,11 +215,11 @@ echo
 print_colored "green" "Finding/Cleaning any dangling softlinks"
 prHeaderLeftQuarter "-"
 printf "Searching... "
-dang_links_ct=$(sudo find / -maxdepth 5  -xtype l -and -not \( -iname /proc/* \) 2>/dev/null | wc -l)
+dang_links_ct=$(sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null | wc -l)
 
 if [[ "${changes_allowed}" -eq 1 ]]
 then
-  sudo find / -maxdepth 5  -xtype l -and -not \( -iname /proc/* \) 2>/dev/null -exec rm {} \;
+  sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null -exec rm {} \;
   echo "Cleaned Up ${dang_links_ct}! (searched 5 levels deep from root)"
 else
   echo "Found ${dang_links_ct} (searched 5 levels deep from root) Not cleaned Up! [REPORTING MODE]"
