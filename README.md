@@ -3,6 +3,9 @@ Handles system cleanup tasks and scans for violations of security best practices
 
 Usage: `bash LinuxRay.sh`
 
+Run passively (reporting mode - no changes made)
+Usage: `bash LinuxRay.sh -r`
+
 
 ### PERFORMANCE CHECKS
 - Top Five Processes Eating Memory
