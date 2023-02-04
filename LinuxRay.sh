@@ -13,12 +13,12 @@
 # If not root or sudoer...
 { [[ $(id -u) -eq 0 ]] || $(sudo -v &>/dev/null) ; } || { echo -e "Please run with sudo privileges.\nExiting..." ; exit 1 ; } 
 
-changes_allowed=1
+changes_allowed=0
 
-# Option to run passively - reporting only (don't make any system changes)
-if [[ "${1}" =~ -r ]]
+# Option to run actively - fix any issues
+if [[ "${1}" =~ -f ]]
 then
-    changes_allowed=0
+    changes_allowed=1
 fi
 
 
