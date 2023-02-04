@@ -13,6 +13,14 @@
 # If not root or sudoer...
 { [[ $(id -u) -eq 0 ]] || $(sudo -v &>/dev/null) ; } || { echo -e "Please run with sudo privileges.\nExiting..." ; exit 1 ; } 
 
+changes_allowed=0
+
+# Option to run passively - reporting only (don't make any system changes)
+if [[ "${1}" =~ -r ]]
+then
+    changes_allowed=1
+fi
+
 
 # **********************************************************
 #           FUNCTIONS
@@ -141,8 +149,14 @@ print_colored "green" "Running Processes attached to deleted files"
 prHeaderLeftQuarter "-"
 num_proc_del=$(lsof 2>/dev/null | grep -i deleted | wc -l)
 print_colored "BLUE" "Found: ${num_proc_del}" "no"
-lsof 2>/dev/null | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
-printf "[CLEANED]\n"
+
+if [[ "${changes_allowed}" -eq 1 ]]
+then
+  lsof 2>/dev/null | grep -i deleted | tr -s [:space:] | cut -d ' ' -f 2 | xargs kill &> /dev/null
+  printf "[CLEANED]\n"
+else
+  printf "[NOT CLEANED] [REPORTING MODE]\n"
+fi
 echo
 echo
 
@@ -199,8 +213,14 @@ echo
 print_colored "green" "Finding/Cleaning any dangling softlinks"
 prHeaderLeftQuarter "-"
 printf "Searching... "
-sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
-echo "Cleaned Up! (searched 5 levels deep from root)"
+if [[ "${changes_allowed}" -eq 1 ]]
+then
+  sudo find / -maxdepth 5  -xtype l 2>/dev/null -exec rm {} \;
+  echo "Cleaned Up! (searched 5 levels deep from root)"
+else
+  dang_links_ct=$(sudo find / -maxdepth 5  -xtype l 2>/dev/null | wc -l)
+  echo "Found ${dang_links_ct} (searched 5 levels deep from root) Not cleaned Up! [REPORTING MODE]"
+fi
 echo
 echo
 
@@ -269,9 +289,15 @@ if [[ -e /etc/systemd/system/ctrl-alt-del.target ]]
 then
   print_colored "green" "Disabled" "no"
 else
-  print_colored "red" "Enabled" "no"
-  sudo systemctl mask ctrl-alt-del.target &> /dev/null
-  print_colored "green" "=> Fixed [Disabled]" "no"
+    if [[ "${changes_allowed}" -eq 1 ]]
+    then
+      print_colored "red" "Enabled" "no"
+      sudo systemctl mask ctrl-alt-del.target &> /dev/null
+      print_colored "green" "=> Fixed [Disabled]" "no"
+    else
+      print_colored "red" "Enabled" "no"
+      print_colored "red" "=> Not Fixed [REPORTING MODE]" "no"
+    fi
 fi
 echo
 
@@ -292,8 +318,13 @@ then
     printf "\t[Current nproc root Limit : ${num_root}]"
   else
     print_colored "red" "YES " "no"
-    sudo bash -c "echo -e 'root\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
-    print_colored "green" "=> FIXED " "no"
+    if [[ "${changes_allowed}" -eq 1 ]]
+    then
+        sudo bash -c "echo -e 'root\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
+        print_colored "green" "=> FIXED " "no"
+    else
+        print_colored "red" "=> NOT FIXED [REPORTING MODE] " "no"
+    fi
   fi
   echo
   
@@ -308,9 +339,15 @@ then
     print_colored "green" "NO " "no"
     printf "\t[Current nproc all Limit : ${num_all}]"
   else
-    print_colored "red" "YES " "no"
-    sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
-    print_colored "green" "=> FIXED " "no"
+      print_colored "red" "YES " "no"
+      if [[ "${changes_allowed}" -eq 1 ]]
+      then
+        sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
+        print_colored "green" "=> FIXED " "no"
+      else
+        sudo bash -c "echo -e '*\t\thard\tnproc\t\t30' >> /etc/security/limits.conf"
+        print_colored "red" "=> NOT FIXED [REPORTING MODE] " "no"
+      fi
   fi
   echo
   
