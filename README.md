@@ -7,6 +7,7 @@ Usage: `bash LinuxRay.sh`
 
 Running in "Fix Mode" allows changes to be made to the system.
 Fixable issues are denoted below with "[F]"
+
 Fix Mode: `bash LinuxRay.sh -r`
 
 
