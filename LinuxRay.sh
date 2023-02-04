@@ -188,7 +188,7 @@ echo
 # Drive Usage
 print_colored "green" "Percent Used per Drive"
 prHeaderLeftQuarter "-"
-df -h | grep -Ev 'tmpfs|Filesystem|none' | awk '{ print $1 " => " $5 }'
+df -h | grep -Ev 'tmpfs|Filesystem|none|loop' | awk '{ print $1 " => " $5 }'
 echo
 echo
 
@@ -212,16 +212,22 @@ echo
 
 
 # Dangling link cleanup
-print_colored "green" "Finding/Cleaning any dangling softlinks"
+print_colored "green" "Finding dangling softlinks (showing top 5)"
 prHeaderLeftQuarter "-"
 printf "Searching... "
 dang_links_ct=$(sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null | wc -l)
+dang_links_top_five=$(sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null | head -5)
 
 if [[ "${changes_allowed}" -eq 1 ]]
 then
+  echo "${dang_links_top_five}"
   sudo find /home/ -maxdepth 5  -xtype l  2>/dev/null -exec rm {} \;
+  echo
   echo "Cleaned Up ${dang_links_ct}! (searched 5 levels deep from root)"
+
 else
+  echo "${dang_links_top_five}"
+  echo
   echo "Found ${dang_links_ct} (searched 5 levels deep from root) Not cleaned Up! [REPORTING MODE]"
 fi
 echo
