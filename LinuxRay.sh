@@ -13,12 +13,12 @@
 # If not root or sudoer...
 { [[ $(id -u) -eq 0 ]] || $(sudo -v &>/dev/null) ; } || { echo -e "Please run with sudo privileges.\nExiting..." ; exit 1 ; } 
 
-changes_allowed=0
+changes_allowed=1
 
 # Option to run passively - reporting only (don't make any system changes)
 if [[ "${1}" =~ -r ]]
 then
-    changes_allowed=1
+    changes_allowed=0
 fi
 
 
@@ -123,6 +123,7 @@ prtxtCentre "LinuxRay"
 prHeader '='
 printf '\n\n\n'
 
+print_colored "purple" "Running in Reporting Mode (no system changes will be made)"
 
 ### PERFORMANCE
 prHeaderLeftQuarter "="
