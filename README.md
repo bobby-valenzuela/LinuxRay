@@ -31,3 +31,9 @@ Fix Mode: `bash LinuxRay.sh -r`
 - Last password change
  
 Note: Must run as a sudoer.
+
+![Alt text](https://raw.githubusercontent.com/bobby-valenzuela/LinuxRay/main/demo01.png?raw=true "Demo 1")  
+
+![Alt text](https://raw.githubusercontent.com/bobby-valenzuela/LinuxRay/main/demo02.png?raw=true "Demo 2")  
+
+![Alt text](https://raw.githubusercontent.com/bobby-valenzuela/LinuxRay/main/demo03.png?raw=true "Demo 3")
